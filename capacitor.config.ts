@@ -9,22 +9,6 @@ const config: CapacitorConfig = {
     url: 'https://86623688-faae-4dbd-8cbc-1ca1e0716abf.lovableproject.com?forceHideBadge=true',
     cleartext: true
   },
-  plugins: {
-    NoShortsPlugin: {
-      // Plugin-specific configuration
-      permissionRequestDelay: 1000, // Delay in ms before checking permission after request
-    },
-    CapacitorHttp: {
-      enabled: true
-    },
-    SplashScreen: {
-      launchShowDuration: 2000,
-      launchAutoHide: true,
-      backgroundColor: "#ffffffff",
-      androidSplashResourceName: "splash",
-      androidScaleType: "CENTER_CROP"
-    }
-  },
   android: {
     buildOptions: {
       keystorePath: undefined,

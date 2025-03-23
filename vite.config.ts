@@ -25,9 +25,5 @@ export default defineConfig(({ mode }) => ({
     assetsDir: 'assets',
     emptyOutDir: true,
     sourcemap: true,
-    // Add these settings for better Capacitor compatibility
-    minify: mode === 'production',
-    target: 'es2015',
-    chunkSizeWarningLimit: 2000
   }
 }));
