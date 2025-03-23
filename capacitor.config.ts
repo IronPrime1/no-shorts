@@ -9,6 +9,11 @@ const config: CapacitorConfig = {
     url: 'https://86623688-faae-4dbd-8cbc-1ca1e0716abf.lovableproject.com?forceHideBadge=true',
     cleartext: true
   },
+  plugins: {
+    NoShortsPlugin: {
+      // You can add plugin-specific configuration here if needed
+    }
+  },
   android: {
     buildOptions: {
       keystorePath: undefined,
