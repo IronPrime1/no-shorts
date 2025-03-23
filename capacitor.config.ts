@@ -11,7 +11,17 @@ const config: CapacitorConfig = {
   },
   plugins: {
     NoShortsPlugin: {
-      // You can add plugin-specific configuration here if needed
+      // Plugin-specific configuration
+    },
+    CapacitorHttp: {
+      enabled: true
+    },
+    SplashScreen: {
+      launchShowDuration: 2000,
+      launchAutoHide: true,
+      backgroundColor: "#ffffffff",
+      androidSplashResourceName: "splash",
+      androidScaleType: "CENTER_CROP"
     }
   },
   android: {

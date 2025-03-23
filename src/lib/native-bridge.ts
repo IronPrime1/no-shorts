@@ -1,4 +1,3 @@
-
 // This file bridges the gap between our React app and native mobile functionality
 
 export interface NativeBridge {
@@ -54,11 +53,24 @@ export const nativeBridge: NativeBridge = (() => {
       openYouTube: async () => {
         try {
           const { NoShortsPlugin } = (window as any).Capacitor.Plugins;
+          console.log('Attempting to open YouTube via native plugin');
           await NoShortsPlugin.openYouTube();
           return Promise.resolve();
         } catch (error) {
-          console.error('Failed to open YouTube:', error);
-          return Promise.reject(error);
+          console.error('Failed to open YouTube via plugin:', error);
+          // Fallback to browser open if plugin fails
+          try {
+            console.log('Attempting fallback: opening YouTube via URL');
+            // Use Capacitor App plugin to open external URL or app
+            const { App } = (window as any).Capacitor.Plugins;
+            await App.openUrl({ url: 'https://youtube.com' });
+            return Promise.resolve();
+          } catch (fallbackError) {
+            console.error('Fallback also failed:', fallbackError);
+            // Last resort: try opening in browser
+            window.open('https://youtube.com', '_blank');
+            return Promise.reject(new Error('Failed to open YouTube'));
+          }
         }
       },
       checkAccessibilityPermission: async () => {
