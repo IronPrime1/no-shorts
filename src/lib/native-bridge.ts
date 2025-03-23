@@ -1,3 +1,4 @@
+
 // This file bridges the gap between our React app and native mobile functionality
 
 export interface NativeBridge {
@@ -76,8 +77,10 @@ export const nativeBridge: NativeBridge = (() => {
       checkAccessibilityPermission: async () => {
         try {
           const { NoShortsPlugin } = (window as any).Capacitor.Plugins;
-          const { value } = await NoShortsPlugin.checkAccessibilityPermission();
-          return value;
+          console.log('Checking accessibility permission via native plugin');
+          const result = await NoShortsPlugin.checkAccessibilityPermission();
+          console.log('Permission check result:', result);
+          return result.value === true;
         } catch (error) {
           console.error('Failed to check accessibility permission:', error);
           return false;
@@ -86,8 +89,16 @@ export const nativeBridge: NativeBridge = (() => {
       requestAccessibilityPermission: async () => {
         try {
           const { NoShortsPlugin } = (window as any).Capacitor.Plugins;
-          const { value } = await NoShortsPlugin.requestAccessibilityPermission();
-          return value;
+          console.log('Requesting accessibility permission via native plugin');
+          const result = await NoShortsPlugin.requestAccessibilityPermission();
+          console.log('Permission request result:', result);
+          
+          // After requesting permission, wait briefly and then check if it was granted
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const checkResult = await NoShortsPlugin.checkAccessibilityPermission();
+          console.log('Permission status after request:', checkResult);
+          
+          return checkResult.value === true;
         } catch (error) {
           console.error('Failed to request accessibility permission:', error);
           return false;
@@ -95,9 +106,19 @@ export const nativeBridge: NativeBridge = (() => {
       },
       startBlockingService: async () => {
         try {
+          // First, verify permission is granted
           const { NoShortsPlugin } = (window as any).Capacitor.Plugins;
-          const { value } = await NoShortsPlugin.startBlockingService();
-          return value;
+          const permissionCheck = await NoShortsPlugin.checkAccessibilityPermission();
+          
+          if (!permissionCheck.value) {
+            console.log('Cannot start service: permission not granted');
+            return false;
+          }
+          
+          console.log('Starting blocking service via native plugin');
+          const result = await NoShortsPlugin.startBlockingService();
+          console.log('Service start result:', result);
+          return result.value === true;
         } catch (error) {
           console.error('Failed to start blocking service:', error);
           return false;
@@ -106,8 +127,10 @@ export const nativeBridge: NativeBridge = (() => {
       stopBlockingService: async () => {
         try {
           const { NoShortsPlugin } = (window as any).Capacitor.Plugins;
-          const { value } = await NoShortsPlugin.stopBlockingService();
-          return value;
+          console.log('Stopping blocking service via native plugin');
+          const result = await NoShortsPlugin.stopBlockingService();
+          console.log('Service stop result:', result);
+          return result.value === true;
         } catch (error) {
           console.error('Failed to stop blocking service:', error);
           return false;
@@ -116,8 +139,10 @@ export const nativeBridge: NativeBridge = (() => {
       isServiceRunning: async () => {
         try {
           const { NoShortsPlugin } = (window as any).Capacitor.Plugins;
-          const { value } = await NoShortsPlugin.isServiceRunning();
-          return value;
+          console.log('Checking if service is running via native plugin');
+          const result = await NoShortsPlugin.isServiceRunning();
+          console.log('Service running check result:', result);
+          return result.value === true;
         } catch (error) {
           console.error('Failed to check if service is running:', error);
           return false;

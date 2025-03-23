@@ -1,6 +1,7 @@
+
 # Android Capacitor Plugin Implementation
 
-To make the app visible in accessibility settings, you need to implement a Capacitor plugin with these key components:
+To make the app visible in accessibility settings and properly handle permissions, you need to implement a Capacitor plugin with these key components:
 
 ## 1. Create the Plugin in Android Studio
 
@@ -52,6 +53,7 @@ class NoShortsPlugin : Plugin() {
     fun checkAccessibilityPermission(call: PluginCall) {
         val result = JSObject()
         val enabled = isAccessibilityServiceEnabled(context)
+        Log.d(TAG, "Checking accessibility permission: $enabled")
         result.put("value", enabled)
         call.resolve(result)
     }
@@ -77,6 +79,7 @@ class NoShortsPlugin : Plugin() {
         // Start the service if accessibility is enabled
         val result = JSObject()
         val enabled = isAccessibilityServiceEnabled(context)
+        Log.d(TAG, "Start blocking service (enabled=$enabled)")
         result.put("value", enabled)
         call.resolve(result)
     }
@@ -93,6 +96,7 @@ class NoShortsPlugin : Plugin() {
     fun isServiceRunning(call: PluginCall) {
         val result = JSObject()
         val enabled = isAccessibilityServiceEnabled(context)
+        Log.d(TAG, "Is service running check: $enabled")
         result.put("value", enabled)
         call.resolve(result)
     }
@@ -106,7 +110,12 @@ class NoShortsPlugin : Plugin() {
                 Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
             )
             
-            return enabledServices?.contains(accessibilityServiceName) == true
+            Log.d(TAG, "Enabled services: $enabledServices")
+            Log.d(TAG, "Looking for service: $accessibilityServiceName")
+            
+            val isEnabled = enabledServices?.contains(accessibilityServiceName) == true
+            Log.d(TAG, "Service is enabled: $isEnabled")
+            return isEnabled
         } catch (e: Exception) {
             Log.e(TAG, "Failed to check accessibility service status", e)
             return false
@@ -143,10 +152,14 @@ class YoutubeShortsBlockerService : AccessibilityService() {
         info.packageNames = arrayOf("com.google.android.youtube")
         
         serviceInfo = info
+        
+        Log.i(TAG, "Service configuration complete")
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         if (event.packageName != "com.google.android.youtube") return
+        
+        Log.d(TAG, "Received accessibility event: ${event.eventType}")
         
         try {
             val rootNode = rootInActiveWindow ?: return
@@ -164,12 +177,16 @@ class YoutubeShortsBlockerService : AccessibilityService() {
         // Search for text nodes containing "Shorts"
         val shortsNodes = findNodesByText(rootNode, "Shorts")
         
+        Log.d(TAG, "Found ${shortsNodes.size} Shorts nodes")
+        
         for (node in shortsNodes) {
             try {
+                Log.d(TAG, "Processing Shorts node: ${node.text}")
                 // Try to find the parent container of Shorts section
                 var parent = node.parent
                 for (i in 0 until 3) { // Try up to 3 levels up
                     if (parent != null) {
+                        Log.d(TAG, "Attempting to hide Shorts element at level $i")
                         // Attempt to hide by performing a click-away
                         // or another accessibility action
                         parent.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS)
@@ -177,7 +194,9 @@ class YoutubeShortsBlockerService : AccessibilityService() {
                         
                         // Try to find a close button or similar
                         val closeButtons = findNodesByText(parent, "Not interested")
+                        Log.d(TAG, "Found ${closeButtons.size} 'Not interested' buttons")
                         for (closeBtn in closeButtons) {
+                            Log.d(TAG, "Clicking 'Not interested' button")
                             closeBtn.performAction(AccessibilityNodeInfo.ACTION_CLICK)
                             closeBtn.recycle()
                         }
@@ -198,6 +217,7 @@ class YoutubeShortsBlockerService : AccessibilityService() {
         
         try {
             if (node.text != null && node.text.toString().contains(text)) {
+                Log.d(TAG, "Found node with text: ${node.text}")
                 results.add(AccessibilityNodeInfo.obtain(node))
             }
             
@@ -299,4 +319,29 @@ public class MainActivity extends BridgeActivity {
 }
 ```
 
-After completing these steps, rebuild and run your app. The accessibility service should now appear in the Android Accessibility settings.
+## 3. Important Debugging Tips
+
+If you're having issues with the accessibility service not being detected or permissions not working:
+
+1. Check Android Manifest: Ensure the service is properly declared with the correct permission.
+
+2. Verify Service Name: The service name used in `isAccessibilityServiceEnabled()` must exactly match your package structure.
+
+3. Add More Logging: Add extensive logging to trace permission checks:
+   ```kotlin
+   Log.d(TAG, "Package name: ${context.packageName}")
+   Log.d(TAG, "Service name: ${accessibilityServiceName}")
+   ```
+
+4. Check LogCat: Filter for "YTShortsBlocker" or "NoShortsPlugin" in Android Studio's LogCat to see detailed logs.
+
+5. Manual Verification: You can manually verify if your service is enabled with:
+   ```kotlin
+   val enabledServicesStr = Settings.Secure.getString(
+       context.contentResolver,
+       Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+   )
+   Log.d(TAG, "Enabled services: $enabledServicesStr")
+   ```
+
+After implementing these changes, rebuild and run your app. The accessibility service should now appear in the Android Accessibility settings and work properly when permissions are granted.

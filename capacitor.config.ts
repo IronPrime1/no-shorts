@@ -12,6 +12,7 @@ const config: CapacitorConfig = {
   plugins: {
     NoShortsPlugin: {
       // Plugin-specific configuration
+      permissionRequestDelay: 1000, // Delay in ms before checking permission after request
     },
     CapacitorHttp: {
       enabled: true
